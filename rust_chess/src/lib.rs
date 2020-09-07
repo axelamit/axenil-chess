@@ -12,12 +12,12 @@ pub mod pieces{
 pub mod units{
     #[derive(Debug, Copy, Clone)]
     pub struct Piece{
-        pub rank: Rank,
+        pub type: Type,
         pub color: Color,
     }
 
     #[derive(Debug, Copy, Clone)]
-    pub enum Rank{
+    pub enum Type{
         Empty,
         Pawn, 
         Bishop,
@@ -45,8 +45,8 @@ pub mod board{
 
     impl Square{
         fn is_empty(&self) -> bool{
-            match self.piece.rank{
-                units::Rank::Empty => true,
+            match self.piece.type{
+                units::Type::Empty => true,
                 _ => false,
             }
         }
@@ -61,7 +61,7 @@ pub mod board{
         pub fn init() -> Board{
             let empty_sqare = Square{
                 piece: units::Piece{
-                    rank: units::Rank::Empty, 
+                    type: units::Type::Empty, 
                     color: units::Color::Empty,
                 },
             };
@@ -76,7 +76,7 @@ pub mod board{
         pub fn print_board(&self){
             for i in 0..8{
                 for j in 0..8{
-                    print!("{:?} ", self.grid[i][j].piece.rank);
+                    print!("{:?} ", self.grid[i][j].piece.type);
                 }
                 println!(""); 
             }
