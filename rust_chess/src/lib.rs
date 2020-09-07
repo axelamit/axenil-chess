@@ -1,22 +1,55 @@
 pub mod pieces{
+    //Individual pieces 
     #[derive(Debug, Copy, Clone)]
-    pub enum Color{
-        Black,
-        White,
+    pub struct Pawn{}
+    pub struct Bishop{}
+    pub struct Knight{}
+    pub struct Rook{}
+    pub struct Queen{}
+    pub struct King{}
+}
+
+pub mod units{
+    #[derive(Debug, Copy, Clone)]
+    pub struct Piece{
+        pub rank: Rank,
+        pub color: Color,
     }
 
     #[derive(Debug, Copy, Clone)]
-    pub struct Piece{
-        pub color: Color,
+    pub enum Rank{
+        Empty,
+        Pawn, 
+        Bishop,
+        Knight,
+        Rook, 
+        Queen,
+        King,
+    }
+
+    #[derive(Debug, Copy, Clone)]
+    pub enum Color{
+        Empty, 
+        Black,
+        White,
     }
 }
 
 pub mod board{
-    use super::pieces; 
+    use super::units; 
 
     #[derive(Debug, Copy, Clone)]
     pub struct Square{
-        piece: pieces::Piece,
+        piece: units::Piece,
+    }
+
+    impl Square{
+        fn is_empty(&self) -> bool{
+            match self.piece.rank{
+                units::Rank::Empty => true,
+                _ => false,
+            }
+        }
     }
 
     #[derive(Debug, Copy, Clone)]
@@ -27,10 +60,13 @@ pub mod board{
     impl Board{
         pub fn init() -> Board{
             let empty_sqare = Square{
-                piece: pieces::Piece{
-                    color: pieces::Color::Black,
+                piece: units::Piece{
+                    rank: units::Rank::Empty, 
+                    color: units::Color::Empty,
                 },
             };
+
+            println!("{:?}", empty_sqare.is_empty()); 
 
             Board{
                 grid: [[empty_sqare; 8]; 8],
@@ -40,11 +76,10 @@ pub mod board{
         pub fn print_board(&self){
             for i in 0..8{
                 for j in 0..8{
-                    print!("{:?} ", self.grid[i][j].piece.color); 
+                    print!("{:?} ", self.grid[i][j].piece.rank);
                 }
                 println!(""); 
             }
-            //write!("Board_number: {}", self.grid);
         }
     }
 }
