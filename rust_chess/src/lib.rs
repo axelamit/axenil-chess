@@ -1,85 +1,320 @@
-pub mod pieces{
-    //Individual pieces 
-    #[derive(Debug, Copy, Clone)]
-    pub struct Pawn{}
-    pub struct Bishop{}
-    pub struct Knight{}
-    pub struct Rook{}
-    pub struct Queen{}
-    pub struct King{}
+pub mod pieces {
+    use super::board; 
+    use super::units;
+
+    pub fn get_possible_moves(x_org: usize, y_org: usize, chess_piece: units::Piece, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let mut move_vec: Vec<(i64, i64, bool)> = chess_piece.get_moves(); 
+        let mut moves = Vec::<(i64, i64, bool)>::new(); 
+        while let Some((x, y, mut multiple_steps)) = move_vec.pop() {
+            if y+(y_org as i64) < 0 || x+(x_org as i64) < 0|| y+(y_org as i64) > 7 || x+(x_org as i64) > 7{ //Kanske ändra till > chess_board.grid[0].len()
+                continue; 
+            }
+            let y_index = (y + (y_org as i64)) as usize; 
+            let x_index = (x + (x_org as i64)) as usize; 
+            let next_square = chess_board.grid[y_index][x_index]; 
+
+            let mut capture = false; //behövs kanske inte
+            if !next_square.is_empty(){
+                if chess_piece.color.forward() == next_square.piece.color.forward(){
+                    continue
+                } 
+                else {
+                    capture = true;
+                    multiple_steps = false;
+                }
+            }
+
+            moves.push((x+(x_org as i64), y+(y_org as i64), capture)); 
+            if multiple_steps{
+                let mut next_x = 0; 
+                let mut next_y = 0; 
+                if x < 0{
+                    next_x = x-1; 
+                }
+                if x > 0{
+                    next_x = x+1; 
+                }
+                if y < 0{
+                    next_y = y-1; 
+                }
+                if y > 0{
+                    next_y = y+1;
+                }
+                move_vec.push((next_x, next_y, multiple_steps)) 
+            }
+        }
+        moves
+    }
+
+    pub fn move_normal(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let chess_piece = chess_board.grid[y][x].piece; 
+        let possible_moves = get_possible_moves(x, y, chess_piece, chess_board); 
+        possible_moves
+    }
+
+    pub fn move_pawn(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let possible_moves = move_normal(x, y, chess_board); 
+        possible_moves
+    }
+
+    pub fn move_bishop(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let possible_moves = move_normal(x, y, chess_board); 
+        possible_moves
+    }
+
+    pub fn move_knight(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let possible_moves = move_normal(x, y, chess_board); 
+        possible_moves
+    }
+
+    pub fn move_rook(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let possible_moves = move_normal(x, y, chess_board); 
+        possible_moves
+    }
+
+    pub fn move_queen(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let possible_moves = move_normal(x, y, chess_board); 
+        possible_moves
+    }
+
+    pub fn move_king(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+        let possible_moves = move_normal(x, y, chess_board); 
+        possible_moves
+    }
 }
 
-pub mod units{
+pub mod units {
+    use super::board; 
+    use super::pieces; 
+
     #[derive(Debug, Copy, Clone)]
-    pub struct Piece{
-        pub type: Type,
+    pub struct Piece {
+        pub variety: Variety,
         pub color: Color,
+        pub has_moved: bool,
     }
 
-    #[derive(Debug, Copy, Clone)]
-    pub enum Type{
-        Empty,
-        Pawn, 
-        Bishop,
-        Knight,
-        Rook, 
-        Queen,
-        King,
-    }
-
-    #[derive(Debug, Copy, Clone)]
-    pub enum Color{
-        Empty, 
-        Black,
-        White,
-    }
-}
-
-pub mod board{
-    use super::units; 
-
-    #[derive(Debug, Copy, Clone)]
-    pub struct Square{
-        piece: units::Piece,
-    }
-
-    impl Square{
-        fn is_empty(&self) -> bool{
-            match self.piece.type{
-                units::Type::Empty => true,
-                _ => false,
+    impl Piece{
+        pub fn get_moves(&self) -> Vec<(i64, i64, bool)>{
+            match self.variety{
+                Variety::Pawn => vec![
+                    (0, self.color.forward(), false)
+                ],
+                Variety::Bishop => vec![
+                    (1, 1, true),
+                    (1, -1, true),
+                    (-1, 1, true),
+                    (-1, -1, true),
+                ],
+                Variety::Knight => vec![
+                    (2, 1, false), 
+                    (2, -1, false),
+                    (-2, 1, false),
+                    (-2, -1, false),
+                    (1, 2, false),
+                    (1, -2, false),
+                    (-1, 2, false),
+                    (-1, -2, false)
+                ],
+                Variety::Rook => vec![
+                    (1, 0, true),
+                    (-1, 0, true),
+                    (0, 1, true),
+                    (0, -1, true)
+                ],
+                Variety::Queen => vec![
+                    (1, 1, true),
+                    (1, -1, true),
+                    (-1, 1, true),
+                    (-1, -1, true),
+                    (1, 0, true),
+                    (-1, 0, true),
+                    (0, 1, true),
+                    (0, -1, true)
+                ],
+                Variety::King => vec![
+                    (1, 1, false),
+                    (1, -1, false),
+                    (-1, 1, false),
+                    (-1, -1, false),
+                    (1, 0, false),
+                    (-1, 0, false),
+                    (0, 1, false),
+                    (0, -1, false)
+                ],
+                _ => Vec::<(i64, i64, bool)>::new(),
             }
         }
     }
 
     #[derive(Debug, Copy, Clone)]
-    pub struct Board{
-        grid: [[Square; 8]; 8],
+    pub enum Variety {
+        Empty,
+        Pawn,
+        Bishop,
+        Knight,
+        Rook,
+        Queen,
+        King,
     }
 
-    impl Board{
-        pub fn init() -> Board{
-            let empty_sqare = Square{
-                piece: units::Piece{
-                    type: units::Type::Empty, 
+    impl Variety {
+        pub fn get_moves(&self, x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)>{
+            match self{
+                //Några kan bytas ut till bara move_normal 
+                Variety::Pawn => pieces::move_pawn(x, y, chess_board),
+                Variety::Bishop => pieces::move_bishop(x, y, chess_board),
+                Variety::Knight => pieces::move_knight(x, y, chess_board),
+                Variety::Rook => pieces::move_rook(x, y, chess_board),
+                Variety::Queen => pieces::move_queen(x, y, chess_board),
+                Variety::King => pieces::move_king(x, y, chess_board),
+                _ => Vec::<(i64, i64, bool)>::new(), 
+            }
+        }
+    }
+
+    #[derive(Debug, Copy, Clone)]
+    pub enum Color {
+        Empty,
+        Black,
+        White,
+    }
+
+    #[allow(warnings)]
+    impl Color {
+        pub fn inverse(&self) -> Color{
+            match self{
+                Color::Black => Color::White,
+                Color::White => Color::Black,
+                _ => Color::Empty,
+            }
+        }
+        pub fn forward(&self) -> i64{
+            match self{
+                Color::Black => 1,
+                Color::White => -1,
+                _ => 0,
+            }
+        }
+    }
+}
+
+pub mod board {
+    use super::units;
+    use std::fs; 
+
+    #[derive(Debug, Copy, Clone)]
+    pub struct Square {
+        pub piece: units::Piece,
+    }
+
+    #[allow(warnings)]
+    impl Square {
+        pub fn is_empty(&self) -> bool {
+            match self.piece.variety {
+                units::Variety::Empty => true,
+                _ => false,
+            }
+        }
+    }
+
+    pub fn get_variety(variety: char) -> units::Variety{
+        match variety{
+            'p' | 'P' => units::Variety::Pawn,
+            'r' | 'R' => units::Variety::Rook,
+            'n' | 'N' => units::Variety::Knight,
+            'b' | 'B' => units::Variety::Bishop,
+            'q' | 'Q' => units::Variety::Queen,
+            'k' | 'K' => units::Variety::King,
+            _ => units::Variety::Empty, 
+        }
+    }
+
+    pub fn convert_position(pos: &str) -> (usize, usize){
+        let column = pos.chars().nth(0).unwrap(); 
+        let row = pos.chars().nth(1).unwrap(); 
+
+        let x = (column as usize)-97; 
+        let y = 8-((row as usize)-48); 
+        (x, y)
+    } 
+
+    pub fn get_color(color: char) -> units::Color{
+        let ascii_color = color as u32; 
+        match ascii_color{
+            ascii_color if (ascii_color > 96) => units::Color::White,
+            _ => units::Color::Black,
+        }
+    }
+
+    #[derive(Debug, Copy, Clone)]
+    pub struct Board {
+        pub grid: [[Square; 8]; 8],
+    }
+
+    impl Board {
+        pub fn init() -> Board {
+            let empty_sqare = Square {
+                piece: units::Piece {
+                    variety: units::Variety::Empty,
                     color: units::Color::Empty,
+                    has_moved: false,
                 },
             };
-
-            println!("{:?}", empty_sqare.is_empty()); 
 
             Board{
                 grid: [[empty_sqare; 8]; 8],
             }
         }
 
-        pub fn print_board(&self){
-            for i in 0..8{
-                for j in 0..8{
-                    print!("{:?} ", self.grid[i][j].piece.type);
+        pub fn read_board(&self, file_name: &str) -> Vec<char> {
+            let contents = fs::read_to_string(file_name).expect("Could not read the file");
+
+            let res: Vec<char> = contents
+                .split_whitespace()
+                .filter_map(|x| x.parse().ok())
+                .collect();
+            
+            res
+        }
+
+        pub fn fill_board(&mut self, file_name: &str) {
+            let start_board = self.read_board(file_name); 
+
+            for i in 0..8 {
+                for j in 0..8 {
+                    self.grid[i][j].piece.variety = get_variety(start_board[i*8+j]);
+
+                    if !self.grid[i][j].is_empty(){
+                        self.grid[i][j].piece.color = get_color(start_board[i*8+j]);
+                    }
                 }
-                println!(""); 
             }
         }
+
+        pub fn get_moves(&self, pos: &str){
+            let (x, y) = convert_position(pos); 
+            let piece = self.grid[y][x].piece; 
+            //Check if chess piece is the same color as the current player. If not return "non legal move"
+            println!("x: {}, y: {}, piece: {:?}", x, y, piece); 
+            println!("X: {}, Y: {}, Piece: {:?}", x, y, piece.variety.get_moves(x, y, &self)); 
+        }
+        
+        pub fn print_board(&self) {
+            for i in 0..8 {
+                for j in 0..8 {
+                    print!("{:?} ", self.grid[i][j].piece.color);
+                }
+                println!("");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn works() { 
+        assert_eq!(2 + 2, 4);
     }
 }
