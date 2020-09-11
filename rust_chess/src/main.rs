@@ -5,5 +5,5 @@ fn main() {
     chess_board.fill_board("./data/board.txt");
     //chess_board.print_board();
     //chess_board.get_moves("d4");
-    chess_board.make_move("b1 c3"); 
+    chess_board.make_move("b1 c3");
 }

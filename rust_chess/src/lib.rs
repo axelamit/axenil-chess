@@ -156,12 +156,7 @@ pub mod units {
     }
 
     impl Variety {
-        pub fn get_moves(
-            &self,
-            x: usize,
-            y: usize,
-            chess_board: &board::Board,
-        ) -> Vec<(i64, i64)> {
+        pub fn get_moves(&self, x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64)> {
             match self {
                 //Några kan bytas ut till bara move_normal
                 Variety::Pawn => pieces::move_normal(x, y, chess_board),
@@ -218,7 +213,7 @@ pub mod board {
                 _ => false,
             }
         }
-        pub fn get_empty() -> Square{
+        pub fn get_empty() -> Square {
             Square {
                 piece: units::Piece {
                     variety: units::Variety::Empty,
@@ -226,7 +221,7 @@ pub mod board {
                     has_moved: false,
                 },
             }
-        } 
+        }
     }
 
     pub fn get_variety(variety: char) -> units::Variety {
@@ -265,7 +260,7 @@ pub mod board {
 
     impl Board {
         pub fn init() -> Board {
-            let empty_square = Square::get_empty();  
+            let empty_square = Square::get_empty();
 
             Board {
                 grid: [[empty_square; 8]; 8],
@@ -304,37 +299,37 @@ pub mod board {
             piece.variety.get_moves(x, y, &self)
         }
 
-        pub fn make_move(&mut self, pos: &str){
-            let split = pos.split(" "); 
-            let vec: Vec<&str> = split.collect(); 
+        pub fn make_move(&mut self, pos: &str) {
+            let split = pos.split(" ");
+            let vec: Vec<&str> = split.collect();
 
             let (x0, y0) = convert_position(vec[0]);
-            let (x1, y1) = convert_position(vec[1]); 
-            let moves = self.get_moves(vec[0]); 
+            let (x1, y1) = convert_position(vec[1]);
+            let moves = self.get_moves(vec[0]);
 
             for position in moves.iter() {
                 let x = position.0 as i64;
                 let y = position.1 as i64;
-                if x == (x1 as i64) && y == (y1 as i64){
+                if x == (x1 as i64) && y == (y1 as i64) {
                     //self.grid
-                    //self.grid[y1][x1] 
-                    self.grid[y1][x1] = self.grid[y0][x0]; 
+                    //self.grid[y1][x1]
+                    self.grid[y1][x1] = self.grid[y0][x0];
                     self.grid[y0][x0] = Square::get_empty();
                     println!("Move is possible")
                 }
             }
-            self.print_board(); 
-            //println!("Moves: {:?}, X1: {}, Y1: {}", moves, x1, y1); 
+            self.print_board();
+            //println!("Moves: {:?}, X1: {}, Y1: {}", moves, x1, y1);
         }
 
         pub fn print_board(&self) {
             println!("   a b c d e f g h");
-            println!("   ---------------"); 
+            println!("   ---------------");
             for i in 0..8 {
-                print!("{}| ", 8-i);
+                print!("{}| ", 8 - i);
                 for j in 0..8 {
-                    let mut square; 
-                    match self.grid[i][j].piece.variety{
+                    let mut square;
+                    match self.grid[i][j].piece.variety {
                         units::Variety::Pawn => square = "p".to_string(),
                         units::Variety::Bishop => square = "b".to_string(),
                         units::Variety::Knight => square = "n".to_string(),
@@ -343,15 +338,15 @@ pub mod board {
                         units::Variety::King => square = "k".to_string(),
                         _ => square = "x".to_string(),
                     }
-                    match self.grid[i][j].piece.color{
+                    match self.grid[i][j].piece.color {
                         units::Color::Black => square = square.to_uppercase(),
-                        _ => (), 
+                        _ => (),
                     }
                     print!("{} ", square);
                 }
-                println!("|{}", 8-i);
+                println!("|{}", 8 - i);
             }
-            println!("   ---------------"); 
+            println!("   ---------------");
             println!("   a b c d e f g h");
         }
     }
