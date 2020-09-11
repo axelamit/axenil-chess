@@ -21,7 +21,7 @@ pub mod pieces {
             }
             let y_index = (y + (y_org as i64)) as usize;
             let x_index = (x + (x_org as i64)) as usize;
-            let next_square = chess_board.grid[y_index][x_index];
+            let next_square = chess_board.get_square(x_index, y_index);
 
             if !next_square.is_empty() {
                 if chess_piece.color.forward() == next_square.piece.color.forward() {
@@ -54,7 +54,7 @@ pub mod pieces {
     }
 
     pub fn move_normal(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64)> {
-        let chess_piece = chess_board.grid[y][x].piece;
+        let chess_piece = chess_board.get_square(x, y).piece;
         let possible_moves = get_possible_moves(x, y, chess_piece, chess_board);
         possible_moves
     }
@@ -97,6 +97,7 @@ pub mod units {
     use super::pieces;
 
     #[derive(Debug, Copy, Clone)]
+    //Kanske ta bort public här
     pub struct Piece {
         pub variety: Variety,
         pub color: Color,
@@ -255,7 +256,7 @@ pub mod board {
 
     #[derive(Debug, Copy, Clone)]
     pub struct Board {
-        pub grid: [[Square; 8]; 8],
+        grid: [[Square; 8]; 8],
     }
 
     impl Board {
@@ -265,6 +266,10 @@ pub mod board {
             Board {
                 grid: [[empty_square; 8]; 8],
             }
+        }
+
+        pub fn get_square(&self, x: usize, y: usize) -> Square{
+            self.grid[y][x]
         }
 
         pub fn read_board(&self, file_name: &str) -> Vec<char> {
