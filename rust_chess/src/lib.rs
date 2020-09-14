@@ -7,6 +7,7 @@ pub mod pieces {
         y_org: usize,
         chess_piece: units::Piece,
         chess_board: &board::Board,
+        capture: bool,
     ) -> Vec<(i64, i64)> {
         let mut move_vec: Vec<(i64, i64, bool)> = chess_piece.get_moves();
         let mut moves = Vec::<(i64, i64)>::new();
@@ -23,8 +24,8 @@ pub mod pieces {
             let x_index = (x + (x_org as i64)) as usize;
             let next_square = chess_board.get_square(x_index, y_index);
 
-            if !next_square.is_empty() {
-                if chess_piece.color.forward() == next_square.piece.color.forward() {
+            if !next_square.is_empty(){
+                if (chess_piece.color.forward() == next_square.piece.color.forward()) || !capture {
                     continue;
                 } else {
                     multiple_steps = false;
@@ -53,34 +54,81 @@ pub mod pieces {
         moves
     }
 
-    pub fn move_normal(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64)> {
+    pub fn get_pawn_capture_moves(
+        x_org: usize,
+        y_org: usize,
+        chess_piece: units::Piece,
+        chess_board: &board::Board,
+    ) -> Vec<(i64, i64)> {
+        let y = ((y_org as i64)+chess_piece.color.forward()) as usize; 
+        let mut moves = Vec::<(i64, i64)>::new();
+
+        if x_org+1 < 8{
+            let next_square = chess_board.get_square(x_org+1, y);  
+            if (next_square.piece.color.forward() != chess_piece.color.forward()) && !next_square.is_empty(){
+                moves.push(((x_org+1) as i64, y as i64)); 
+            }
+        }
+
+        if (x_org as i64)-1 >= 0 {
+            let next_square = chess_board.get_square(x_org-1, y);  
+            if (next_square.piece.color.forward() != chess_piece.color.forward()) && !next_square.is_empty(){
+                moves.push(((x_org-1) as i64, y as i64)); 
+            }
+        }
+
+        moves
+    }
+
+    pub fn pawn_two_steps(
+        x_org: usize,
+        y_org: usize,
+        chess_piece: units::Piece,
+        chess_board: &board::Board,
+    ) -> Vec<(i64, i64)> {
+        let mut moves = Vec::<(i64, i64)>::new();
+        if !chess_piece.has_moved{
+            let y1 = ((y_org as i64)+chess_piece.color.forward()) as usize; 
+            let y2 = ((y_org as i64)+chess_piece.color.forward()*2) as usize; 
+            let one_forward = chess_board.get_square(x_org, y1); 
+            let two_forward = chess_board.get_square(x_org, y2); 
+            if one_forward.is_empty() && two_forward.is_empty(){
+                moves.push((x_org as i64, y2 as i64)); 
+            }
+        }
+        moves
+    }
+    
+    pub fn move_pawn(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64)> {
+        let mut moves = Vec::<(i64, i64)>::new();
         let chess_piece = chess_board.get_square(x, y).piece;
-        let possible_moves = get_possible_moves(x, y, chess_piece, chess_board);
-        possible_moves
+
+        let normal_moves = move_normal(x, y, chess_board, false);
+        let capture_moves = get_pawn_capture_moves(x, y, chess_piece, chess_board); 
+        let two_steps = pawn_two_steps(x, y, chess_piece, chess_board); 
+
+        for normal_move in normal_moves.iter(){
+            moves.push(normal_move.to_owned()); 
+        }
+
+        for capture_move in capture_moves.iter(){
+            moves.push(capture_move.to_owned()); 
+        }
+
+        for two_step_move in two_steps.iter(){
+            moves.push(two_step_move.to_owned());
+        }
+
+        moves
     }
 
+    pub fn move_normal(x: usize, y: usize, chess_board: &board::Board, capture: bool) -> Vec<(i64, i64)> {
+        let chess_piece = chess_board.get_square(x, y).piece;
+        let possible_moves = get_possible_moves(x, y, chess_piece, chess_board, capture);
+        possible_moves
+    }
     /*
-    pub fn move_pawn(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)> {
-        let possible_moves = move_normal(x, y, chess_board);
-        possible_moves
-    }
-
-    pub fn move_bishop(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)> {
-        let possible_moves = move_normal(x, y, chess_board);
-        possible_moves
-    }
-
-    pub fn move_knight(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)> {
-        let possible_moves = move_normal(x, y, chess_board);
-        possible_moves
-    }
-
     pub fn move_rook(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)> {
-        let possible_moves = move_normal(x, y, chess_board);
-        possible_moves
-    }
-
-    pub fn move_queen(x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64, bool)> {
         let possible_moves = move_normal(x, y, chess_board);
         possible_moves
     }
@@ -159,13 +207,12 @@ pub mod units {
     impl Variety {
         pub fn get_moves(&self, x: usize, y: usize, chess_board: &board::Board) -> Vec<(i64, i64)> {
             match self {
-                //Några kan bytas ut till bara move_normal
-                Variety::Pawn => pieces::move_normal(x, y, chess_board),
-                Variety::Bishop => pieces::move_normal(x, y, chess_board),
-                Variety::Knight => pieces::move_normal(x, y, chess_board),
-                Variety::Rook => pieces::move_normal(x, y, chess_board),
-                Variety::Queen => pieces::move_normal(x, y, chess_board),
-                Variety::King => pieces::move_normal(x, y, chess_board),
+                Variety::Pawn => pieces::move_pawn(x, y, chess_board),
+                Variety::Bishop => pieces::move_normal(x, y, chess_board, true),
+                Variety::Knight => pieces::move_normal(x, y, chess_board, true),
+                Variety::Rook => pieces::move_normal(x, y, chess_board, true),
+                Variety::Queen => pieces::move_normal(x, y, chess_board, true),
+                Variety::King => pieces::move_normal(x, y, chess_board, true),
                 _ => Vec::<(i64, i64)>::new(),
             }
         }
@@ -257,6 +304,7 @@ pub mod board {
     #[derive(Debug, Copy, Clone)]
     pub struct Board {
         grid: [[Square; 8]; 8],
+        current_player: units::Color,
     }
 
     impl Board {
@@ -265,6 +313,7 @@ pub mod board {
 
             Board {
                 grid: [[empty_square; 8]; 8],
+                current_player: units::Color::White,
             }
         }
 
@@ -305,6 +354,13 @@ pub mod board {
         }
 
         pub fn make_move(&mut self, pos: &str) {
+            let (valid, message) = self.check_if_possible_move(pos, true);
+            println!("Valid: {}, Message: {}", valid, message);  
+            self.print_board();
+            //println!("Moves: {:?}, X1: {}, Y1: {}", moves, x1, y1);
+        }
+
+        pub fn check_if_possible_move(&mut self, pos: &str, move_piece: bool) -> (bool, String){
             let split = pos.split(" ");
             let vec: Vec<&str> = split.collect();
 
@@ -318,13 +374,61 @@ pub mod board {
                 if x == (x1 as i64) && y == (y1 as i64) {
                     //self.grid
                     //self.grid[y1][x1]
+                    let old_square = self.grid[y1][x1]; 
                     self.grid[y1][x1] = self.grid[y0][x0];
                     self.grid[y0][x0] = Square::get_empty();
-                    println!("Move is possible")
+
+                    if self.chess(){
+                        self.grid[y0][x0] = self.grid[y1][x1]; 
+                        self.grid[y1][x1] = old_square; 
+                        return (false, "Chess!".to_string())
+                    }
+                    else{
+                        if !move_piece{
+                            self.grid[y0][x0] = self.grid[y1][x1]; 
+                            self.grid[y1][x1] = old_square; 
+                        }
+                        else{
+                            self.grid[y1][x1].piece.has_moved = true; 
+                        }
+                        return (true, "".to_string())
+                    }
                 }
             }
-            self.print_board();
-            //println!("Moves: {:?}, X1: {}, Y1: {}", moves, x1, y1);
+            (false, "Invalid move".to_string())
+        }
+
+        pub fn chess(&self) -> bool{
+            let mut king_x = 0; 
+            let mut king_y = 0; 
+            for i in 0..8{
+                for j in 0..8{
+                    if self.grid[i][j].piece.color.forward() == self.current_player.forward() {
+                        match self.grid[i][j].piece.variety{
+                            units::Variety::King => {
+                                king_x = j; 
+                                king_y = i; 
+                            }, 
+                            _ => (),
+                        }
+                    }
+                }
+            }
+
+            for i in 0..8{
+                for j in 0..8{
+                    if !self.grid[i][j].is_empty() && (self.grid[i][j].piece.color.forward() != self.current_player.forward()) {
+                        let moves = self.grid[i][j].piece.variety.get_moves(j, i, &self); 
+                        for position in moves.iter(){
+                            if position.0 == (king_x as i64) && position.1 == (king_y as i64) {
+                                return true
+                            } 
+                        }
+                    }
+                }
+            }
+
+            false
         }
 
         pub fn print_board(&self) {
