@@ -9,8 +9,9 @@ fn main() {
     //chess_board.make_move("b2 b4");
     //chess_board.make_move("O-O-O"); 
 
-    let (gamestate, invalid_move, message) = chess_board.make_move("h3 h2"); 
-    println!("Gamestate: {}, Invalid_move: {}, Message: {}", gamestate, invalid_move, message); 
+    chess_board.make_move("h3 h2=R"); 
+    //let (gamestate, invalid_move, message) = chess_board.make_move("h3 h2"); 
+    //println!("Gamestate: {}, Invalid_move: {}, Message: {}", gamestate, invalid_move, message); 
     //chess_board.make_move("e4 e5")
     
     //println!("Chess? : {}", chess_board.chess()); 

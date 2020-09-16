@@ -60,8 +60,11 @@ pub mod moves {
         chess_piece: units::Piece,
         chess_board: &board::Board,
     ) -> Vec<(i64, i64)> {
-        let y = ((y_org as i64)+chess_piece.color.forward()) as usize; 
         let mut moves = Vec::<(i64, i64)>::new();
+        if y_org > 6 || y_org < 1{
+            return moves;
+        }
+        let y = ((y_org as i64)+chess_piece.color.forward()) as usize; 
 
         if x_org+1 < 8{
             let next_square = chess_board.get_square(x_org+1, y);  
@@ -88,7 +91,7 @@ pub mod moves {
         chess_board: &board::Board,
     ) -> Vec<(i64, i64)> {
         let mut moves = Vec::<(i64, i64)>::new();
-        if !chess_piece.has_moved{
+        if !chess_piece.has_moved && y_org < 7 && y_org > 1{
             let y1 = ((y_org as i64)+chess_piece.color.forward()) as usize; 
             let y2 = ((y_org as i64)+chess_piece.color.forward()*2) as usize; 
             let one_forward = chess_board.get_square(x_org, y1); 
@@ -413,7 +416,14 @@ pub mod board {
         }
 
         //Kolla om spelaren inte är i schack och inte kan göra några drag, isåfall lika 
-        pub fn make_move(&mut self, pos: &str) -> (bool, bool, String){
+        pub fn make_move(&mut self, input: &str) -> (bool, bool, String){
+            let tokens: Vec<&str>= input.split("=").collect();
+            let pos = tokens[0]; 
+            let mut promotion = "".to_string(); 
+            if tokens.len() > 1{
+                promotion.push_str(tokens[1]); 
+            }
+
             if let "O-O-O" = pos {
                 let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) = moves::queenside_castling(self); 
                 if valid{
@@ -445,6 +455,9 @@ pub mod board {
                 if !valid{
                     return (false, true, message); 
                 }
+                if !promotion.is_empty(){
+                    self.promotion(get_variety(promotion.chars().next().unwrap()));
+                }
                 self.current_player = self.current_player.inverse();  
             }
             self.print_board();
@@ -455,6 +468,17 @@ pub mod board {
             }
             (false, false, state.1)
         }
+
+        pub fn promotion(&mut self, variety: units::Variety){
+            for i in 0..8{
+                if let units::Variety::Pawn = self.grid[0][i].piece.variety{
+                    self.grid[0][i].piece.variety = variety; 
+                } 
+                if let units::Variety::Pawn = self.grid[7][i].piece.variety{
+                    self.grid[7][i].piece.variety = variety; 
+                }
+            }
+        } 
 
         pub fn get_state(&mut self) -> (bool, String){
             if self.checkmate(){
