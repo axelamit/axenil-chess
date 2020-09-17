@@ -47,3 +47,13 @@ fn get_state_test() {
 
     assert!(chess_board.get_state().0);
 }
+
+#[test]
+fn gibberish() {
+    let mut chess_board = board::Board::init();
+    chess_board.fill_board("./data/board.txt");
+
+    chess_board.make_move("abcadsak"); 
+    chess_board.make_move("ab ab ab"); 
+    chess_board.make_move("e2 e9"); 
+}
