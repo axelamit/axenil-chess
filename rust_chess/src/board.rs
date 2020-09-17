@@ -1,5 +1,5 @@
-use crate::units; 
-use crate::moves; 
+use crate::moves;
+use crate::units;
 
 use std::fs;
 
@@ -50,8 +50,8 @@ pub fn string_to_position(pos: &str) -> (usize, usize) {
 
 pub fn position_to_string(r: u8, c: u8) -> String {
     let row = (r as char).to_string();
-    let col = (c as char).to_string(); 
-    let pos = [col, row].join(""); 
+    let col = (c as char).to_string();
+    let pos = [col, row].join("");
     pos
 }
 
@@ -68,6 +68,7 @@ pub struct Board {
     grid: [[Square; 8]; 8],
     current_player: units::Color,
     passant: (i64, i64),
+    promotion: bool,
 }
 
 impl Board {
@@ -77,21 +78,26 @@ impl Board {
         Board {
             grid: [[empty_square; 8]; 8],
             current_player: units::Color::White,
-            passant: (-1, -1), 
+            passant: (-1, -1),
+            promotion: false,
         }
     }
 
-    pub fn get_square(&self, x: usize, y: usize) -> Square{
+    pub fn get_square(&self, x: usize, y: usize) -> Square {
         self.grid[y][x]
     }
 
-    pub fn get_current_player(&self) -> units::Color{
+    pub fn get_current_player(&self) -> units::Color {
         self.current_player
     }
 
-    pub fn get_passant(&self) -> (i64, i64){
+    pub fn get_passant(&self) -> (i64, i64) {
         self.passant
-    } 
+    }
+
+    pub fn get_promotion(&self) -> bool {
+        self.promotion
+    }
 
     pub fn read_board(&self, file_name: &str) -> Vec<char> {
         let contents = fs::read_to_string(file_name).expect("Could not read the file");
@@ -121,97 +127,96 @@ impl Board {
     pub fn get_moves(&self, pos: &str) -> Vec<(i64, i64)> {
         let (x, y) = string_to_position(pos);
         let piece = self.grid[y][x].piece;
-        if piece.color.forward() == self.current_player.forward(){
-            return piece.variety.get_moves(x, y, &self)
+        if piece.color.forward() == self.current_player.forward() {
+            return piece.variety.get_moves(x, y, &self);
         }
         Vec::<(i64, i64)>::new()
     }
 
-    //Kolla om spelaren inte är i schack och inte kan göra några drag, isåfall lika 
-    pub fn make_move(&mut self, input: &str) -> (bool, bool, String){
-        let tokens: Vec<&str>= input.split("=").collect();
-        let pos = tokens[0]; 
-        let mut promotion = "".to_string(); 
-        if tokens.len() > 1{
-            promotion.push_str(tokens[1]); 
+    //Returns (gameOver, valid_move, message)
+    pub fn make_move(&mut self, input: &str) -> (bool, bool, String) {
+        let tokens: Vec<&str> = input.split("=").collect();
+        let pos = tokens[0];
+        let mut promotion = "".to_string();
+        if tokens.len() > 1 {
+            promotion.push_str(tokens[1]);
+            self.promotion = true;
+            println!("Promotion is true");
+        } else {
+            self.promotion = false;
         }
 
         if let "O-O-O" = pos {
-            let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) = moves::queenside_castling(self); 
-            if valid{
-                self.grid[y][king_new_x] = self.grid[y][king_org_x]; 
+            let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) =
+                moves::queenside_castling(self);
+            if valid {
+                self.grid[y][king_new_x] = self.grid[y][king_org_x];
                 self.grid[y][king_org_x] = Square::get_empty();
 
-                self.grid[y][rook_new_x] = self.grid[y][rook_org_x]; 
+                self.grid[y][rook_new_x] = self.grid[y][rook_org_x];
                 self.grid[y][rook_org_x] = Square::get_empty();
+            } else {
+                return (false, false, "Queenside castling not possible".to_string());
             }
-            else{
-                return (false, true, "Queenside castling not possible".to_string()); 
-            }
-        }
-        else if let "O-O" = pos{
-            let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) = moves::kingside_castling(self);
-            if valid{
-                self.grid[y][king_new_x] = self.grid[y][king_org_x]; 
+        } else if let "O-O" = pos {
+            let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) =
+                moves::kingside_castling(self);
+            if valid {
+                self.grid[y][king_new_x] = self.grid[y][king_org_x];
                 self.grid[y][king_org_x] = Square::get_empty();
 
-                self.grid[y][rook_new_x] = self.grid[y][rook_org_x]; 
+                self.grid[y][rook_new_x] = self.grid[y][rook_org_x];
                 self.grid[y][rook_org_x] = Square::get_empty();
+            } else {
+                return (false, false, "Kingside castling not possible".to_string());
             }
-            else{
-                return (false, true, "Kingside castling not possible".to_string()); 
-            }
-        }
-        else{
+        } else {
             let (valid, message) = self.check_if_legal_move(pos, true);
-            if !valid{
-                return (false, true, message); 
+            if !valid {
+                return (false, false, message);
             }
-            if !promotion.is_empty(){
+            if !promotion.is_empty() {
                 self.promotion(get_variety(promotion.chars().next().unwrap()));
             }
         }
-        self.current_player = self.current_player.inverse();   
+        self.current_player = self.current_player.inverse();
         self.print_board();
 
-        let state = self.get_state(); 
-        if !state.0{
-            return (true, false, state.1); 
+        let state = self.get_state();
+        if !state.0 {
+            return (true, true, state.1);
         }
-        (false, false, state.1)
+        (false, true, state.1)
     }
 
-    pub fn promotion(&mut self, variety: units::Variety){
-        for i in 0..8{
-            if let units::Variety::Pawn = self.grid[0][i].piece.variety{
-                self.grid[0][i].piece.variety = variety; 
-            } 
-            if let units::Variety::Pawn = self.grid[7][i].piece.variety{
-                self.grid[7][i].piece.variety = variety; 
+    pub fn promotion(&mut self, variety: units::Variety) {
+        for i in 0..8 {
+            if let units::Variety::Pawn = self.grid[0][i].piece.variety {
+                self.grid[0][i].piece.variety = variety;
             }
-        }
-    } 
-
-    pub fn get_state(&mut self) -> (bool, String){
-        if self.checkmate(){
-            if self.check(){
-                return (false, "Checkmate".to_string());  
-            }
-            else{
-                return (false, "Stalemate".to_string()); 
-            }
-        }
-        else{
-            if self.check(){
-                return (true, "Check".to_string()); 
-            }
-            else{
-                return (true, "".to_string()); 
+            if let units::Variety::Pawn = self.grid[7][i].piece.variety {
+                self.grid[7][i].piece.variety = variety;
             }
         }
     }
 
-    pub fn check_if_legal_move(&mut self, pos: &str, move_piece: bool) -> (bool, String){
+    pub fn get_state(&mut self) -> (bool, String) {
+        if self.checkmate() {
+            if self.check() {
+                return (false, "Checkmate".to_string());
+            } else {
+                return (false, "Stalemate".to_string());
+            }
+        } else {
+            if self.check() {
+                return (true, "Check".to_string());
+            } else {
+                return (true, "".to_string());
+            }
+        }
+    }
+
+    pub fn check_if_legal_move(&mut self, pos: &str, move_piece: bool) -> (bool, String) {
         let split = pos.split(" ");
         let vec: Vec<&str> = split.collect();
 
@@ -223,53 +228,53 @@ impl Board {
             let x = position.0 as i64;
             let y = position.1 as i64;
             if x == (x1 as i64) && y == (y1 as i64) {
-                let old_square = self.grid[y1][x1]; 
+                let old_square = self.grid[y1][x1];
                 self.grid[y1][x1] = self.grid[y0][x0];
                 self.grid[y0][x0] = Square::get_empty();
 
-                if self.check(){
-                    self.grid[y0][x0] = self.grid[y1][x1]; 
-                    self.grid[y1][x1] = old_square; 
-                    return (false, "Check!".to_string())
-                }
-                else{
-                    if !move_piece{
-                        self.grid[y0][x0] = self.grid[y1][x1]; 
-                        self.grid[y1][x1] = old_square; 
-                    }
-                    else{
-                        let mut set_passant = false; 
-                        if let units::Variety::Pawn = self.grid[y1][x1].piece.variety{
-                            if ((y1 as i64)-(y0 as i64)).abs() > 1{
-                                set_passant = true; 
+                if self.check() {
+                    self.grid[y0][x0] = self.grid[y1][x1];
+                    self.grid[y1][x1] = old_square;
+                    return (false, "Check!".to_string());
+                } else {
+                    if !move_piece {
+                        self.grid[y0][x0] = self.grid[y1][x1];
+                        self.grid[y1][x1] = old_square;
+                    } else {
+                        let mut set_passant = false;
+                        if let units::Variety::Pawn = self.grid[y1][x1].piece.variety {
+                            if ((y1 as i64) - (y0 as i64)).abs() > 1 {
+                                set_passant = true;
                             }
-                            if old_square.is_empty() && ((y1 as i64)-(y0 as i64)).abs() == 1 && ((x1 as i64)-(x0 as i64)).abs() == 1{
-                                self.grid[y0][x1] = Square::get_empty(); 
+                            if old_square.is_empty()
+                                && ((y1 as i64) - (y0 as i64)).abs() == 1
+                                && ((x1 as i64) - (x0 as i64)).abs() == 1
+                            {
+                                self.grid[y0][x1] = Square::get_empty();
                             }
                         }
 
-                        if set_passant{
-                            self.passant = (x1 as i64, y1 as i64); 
+                        if set_passant {
+                            self.passant = (x1 as i64, y1 as i64);
+                        } else {
+                            self.passant = (-1, -1);
                         }
-                        else {
-                            self.passant = (-1, -1); 
-                        }
-                        self.grid[y1][x1].piece.has_moved = true; 
+                        self.grid[y1][x1].piece.has_moved = true;
                     }
-                    return (true, "".to_string())
+                    return (true, "".to_string());
                 }
             }
         }
         (false, "Invalid move".to_string())
     }
 
-    pub fn get_all_valid_moves(&mut self, positions: Vec<String>) -> Vec<String>{
-        let mut valid_moves: Vec<String> = Vec::new(); 
-        for pos1 in positions.iter(){
-            for pos2 in positions.iter(){
-                let pos = pos1.to_owned()+&" ".to_string()+&pos2.to_owned(); 
+    pub fn get_all_valid_moves(&mut self, positions: Vec<String>) -> Vec<String> {
+        let mut valid_moves: Vec<String> = Vec::new();
+        for pos1 in positions.iter() {
+            for pos2 in positions.iter() {
+                let pos = pos1.to_owned() + &" ".to_string() + &pos2.to_owned();
                 let (valid, _) = self.check_if_legal_move(&pos, false);
-                if valid{
+                if valid {
                     valid_moves.push(pos);
                 }
             }
@@ -277,69 +282,70 @@ impl Board {
         valid_moves
     }
 
-    pub fn checkmate(&mut self) -> bool{
-        let mut positions: Vec<String> = Vec::new(); 
-        for i in 49..57{
-            for j in 97..105{
-                let pos = position_to_string(i as u8, j as u8); 
+    pub fn checkmate(&mut self) -> bool {
+        let mut positions: Vec<String> = Vec::new();
+        for i in 49..57 {
+            for j in 97..105 {
+                let pos = position_to_string(i as u8, j as u8);
                 positions.push(pos.to_owned());
             }
         }
 
-        let valid_moves = self.get_all_valid_moves(positions); 
+        let valid_moves = self.get_all_valid_moves(positions);
 
-        if valid_moves.len() > 0{
-            return false
+        if valid_moves.len() > 0 {
+            return false;
         }
 
         true
     }
 
-    pub fn move_check(&mut self, x_org: usize, y_org: usize, x_new: usize, y_new: usize) -> bool{
-        let check; 
-        
-        if x_org != x_new || y_org != y_new{
-            let old_square = self.grid[y_new][x_new]; 
-            self.grid[y_new][x_new] = self.grid[y_org][x_org]; 
-            self.grid[y_org][x_org] = Square::get_empty(); 
+    pub fn move_check(&mut self, x_org: usize, y_org: usize, x_new: usize, y_new: usize) -> bool {
+        let check;
 
-            check = self.check(); 
+        if x_org != x_new || y_org != y_new {
+            let old_square = self.grid[y_new][x_new];
+            self.grid[y_new][x_new] = self.grid[y_org][x_org];
+            self.grid[y_org][x_org] = Square::get_empty();
 
-            self.grid[y_org][x_org] = self.grid[y_new][x_new]; 
+            check = self.check();
+
+            self.grid[y_org][x_org] = self.grid[y_new][x_new];
             self.grid[y_new][x_new] = old_square;
-        } 
-        else{
-            check = self.check(); 
+        } else {
+            check = self.check();
         }
 
         check
     }
 
-    pub fn check(&self) -> bool{
-        let mut king_x = 0; 
-        let mut king_y = 0; 
-        for i in 0..8{
-            for j in 0..8{
+    pub fn check(&self) -> bool {
+        let mut king_x = 0;
+        let mut king_y = 0;
+        for i in 0..8 {
+            for j in 0..8 {
                 if self.grid[i][j].piece.color.forward() == self.current_player.forward() {
-                    match self.grid[i][j].piece.variety{
+                    match self.grid[i][j].piece.variety {
                         units::Variety::King => {
-                            king_x = j; 
-                            king_y = i; 
-                        }, 
+                            king_x = j;
+                            king_y = i;
+                        }
                         _ => (),
                     }
                 }
             }
         }
 
-        for i in 0..8{
-            for j in 0..8{
-                if !self.grid[i][j].is_empty() && (self.grid[i][j].piece.color.forward() != self.current_player.forward()) {
-                    let moves = self.grid[i][j].piece.variety.get_moves(j, i, &self); 
-                    for position in moves.iter(){
+        for i in 0..8 {
+            for j in 0..8 {
+                if !self.grid[i][j].is_empty()
+                    && (self.grid[i][j].piece.color.forward() != self.current_player.forward())
+                {
+                    let moves = self.grid[i][j].piece.variety.get_moves(j, i, &self);
+                    for position in moves.iter() {
                         if position.0 == (king_x as i64) && position.1 == (king_y as i64) {
-                            return true
-                        } 
+                            return true;
+                        }
                     }
                 }
             }

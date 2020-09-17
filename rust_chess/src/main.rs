@@ -2,27 +2,52 @@ use rust_chess::board;
 
 fn main() {
     let mut chess_board = board::Board::init();
-    chess_board.fill_board("./data/passant_test.txt");
-    chess_board.make_move("c4 c5"); 
-    chess_board.make_move("b7 b5"); 
-    chess_board.make_move("c5 b6");
-    /*
-    chess_board.make_move("b2 b3"); 
-    chess_board.make_move("b7 b6");
-    chess_board.make_move("b1 c3");
-    chess_board.make_move("c8 a6"); */
-    //chess_board.make_move("c8 a6");  
-    
-    //chess_board.fill_board("./data/castling_test.txt"); 
-    //chess_board.get_moves("d4");
-    //chess_board.make_move("f2 f4");
-    //chess_board.make_move("b2 b4");
-    //chess_board.make_move("O-O-O"); 
+    chess_board.fill_board("./data/board.txt");
 
-    //chess_board.make_move("h3 h2=R"); 
-    //let (gamestate, invalid_move, message) = chess_board.make_move("h3 h2"); 
-    //println!("Gamestate: {}, Invalid_move: {}, Message: {}", gamestate, invalid_move, message); 
-    //chess_board.make_move("e4 e5")
-    
-    //println!("Chess? : {}", chess_board.chess()); 
+    chess_board.make_move("e2 e4");
+    chess_board.make_move("e7 e5");
+
+    chess_board.make_move("g1 f3");
+    chess_board.make_move("f7 f6");
+
+    chess_board.make_move("f3 e5");
+    chess_board.make_move("f6 e5");
+
+    chess_board.make_move("d1 h5");
+    chess_board.check();
+    chess_board.make_move("e8 e7");
+
+    chess_board.make_move("h5 e5");
+    chess_board.check();
+    chess_board.make_move("e7 f7");
+
+    chess_board.make_move("f1 c4");
+    chess_board.check();
+    chess_board.make_move("d7 d5");
+
+    chess_board.make_move("c4 d5");
+    chess_board.check();
+    chess_board.make_move("f7 g6");
+
+    chess_board.make_move("h2 h4");
+    chess_board.make_move("h7 h5");
+
+    chess_board.make_move("d5 b7");
+    chess_board.make_move("c8 b7");
+
+    chess_board.make_move("e5 f5");
+    chess_board.check();
+    chess_board.make_move("g6 h6");
+
+    chess_board.make_move("d2 d4");
+    chess_board.check();
+    chess_board.make_move("g7 g5");
+
+    chess_board.make_move("f5 f7");
+    chess_board.make_move("d8 e7");
+
+    chess_board.make_move("h4 g5");
+    chess_board.make_move("e7 g5");
+
+    chess_board.make_move("h1 h5");
 }
