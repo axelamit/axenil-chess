@@ -91,15 +91,35 @@ pub mod moves {
         chess_board: &board::Board,
     ) -> Vec<(i64, i64)> {
         let mut moves = Vec::<(i64, i64)>::new();
-        if !chess_piece.has_moved && y_org < 7 && y_org > 1{
-            let y1 = ((y_org as i64)+chess_piece.color.forward()) as usize; 
-            let y2 = ((y_org as i64)+chess_piece.color.forward()*2) as usize; 
-            let one_forward = chess_board.get_square(x_org, y1); 
-            let two_forward = chess_board.get_square(x_org, y2); 
+        let y1 = (y_org as i64)+chess_piece.color.forward(); 
+        let y2 = (y_org as i64)+chess_piece.color.forward()*2; 
+        if !chess_piece.has_moved && y2 <= 7 && y2 >= 0{
+            let one_forward = chess_board.get_square(x_org, y1 as usize); 
+            let two_forward = chess_board.get_square(x_org, y2 as usize); 
             if one_forward.is_empty() && two_forward.is_empty(){
-                moves.push((x_org as i64, y2 as i64)); 
+                moves.push((x_org as i64, y2)); 
             }
         }
+        moves
+    }
+
+    pub fn pawn_passant(
+        x_org: usize,
+        y_org: usize,
+        chess_piece: units::Piece,
+        chess_board: &board::Board,
+    ) -> Vec<(i64, i64)> {
+        let mut moves = Vec::<(i64, i64)>::new(); 
+        let passant = chess_board.get_passant(); 
+        if passant.1 == (y_org as i64) && ((passant.0 as i64)-(x_org as i64)).abs() == 1{
+            let y = (y_org as i64)+chess_piece.color.forward(); 
+            let x = passant.0 as i64; 
+            if y >= 0 && y <= 7 && x >= 0 && x <= 7{
+                if chess_board.get_square(x as usize, y as usize).is_empty(){
+                    moves.push((x, y)); 
+                }
+            } 
+        } 
         moves
     }
     
@@ -110,6 +130,7 @@ pub mod moves {
         let normal_moves = move_normal(x, y, chess_board, false);
         let capture_moves = get_pawn_capture_moves(x, y, chess_piece, chess_board); 
         let two_steps = pawn_two_steps(x, y, chess_piece, chess_board); 
+        let passant_moves = pawn_passant(x, y, chess_piece, chess_board); 
 
         for normal_move in normal_moves.iter(){
             moves.push(normal_move.to_owned()); 
@@ -121,6 +142,10 @@ pub mod moves {
 
         for two_step_move in two_steps.iter(){
             moves.push(two_step_move.to_owned());
+        }
+
+        for passant_move in passant_moves.iter(){
+            moves.push(passant_move.to_owned()); 
         }
 
         moves
@@ -158,7 +183,7 @@ pub mod moves {
                     let mx = cmp::max(king_org_x, king_new_x); 
 
                     for x_pos in mn..(mx+1){
-                        if chess_board.move_check_check(king_org_x, y, x_pos, y) {
+                        if chess_board.move_check(king_org_x, y, x_pos, y) {
                             return (false, king_org_x, king_new_x, rook_org_x, rook_new_x, y)
                         }
                     }
@@ -293,8 +318,9 @@ pub mod units {
 }
 
 pub mod board {
-    use super::units;
+    use super::units; 
     use super::moves; 
+
     use std::fs;
 
     #[derive(Debug, Copy, Clone)]
@@ -361,6 +387,7 @@ pub mod board {
     pub struct Board {
         grid: [[Square; 8]; 8],
         current_player: units::Color,
+        passant: (i64, i64),
     }
 
     impl Board {
@@ -370,6 +397,7 @@ pub mod board {
             Board {
                 grid: [[empty_square; 8]; 8],
                 current_player: units::Color::White,
+                passant: (-1, -1), 
             }
         }
 
@@ -380,6 +408,10 @@ pub mod board {
         pub fn get_current_player(&self) -> units::Color{
             self.current_player
         }
+
+        pub fn get_passant(&self) -> (i64, i64){
+            self.passant
+        } 
 
         pub fn read_board(&self, file_name: &str) -> Vec<char> {
             let contents = fs::read_to_string(file_name).expect("Could not read the file");
@@ -458,8 +490,8 @@ pub mod board {
                 if !promotion.is_empty(){
                     self.promotion(get_variety(promotion.chars().next().unwrap()));
                 }
-                self.current_player = self.current_player.inverse();  
             }
+            self.current_player = self.current_player.inverse();   
             self.print_board();
 
             let state = self.get_state(); 
@@ -526,6 +558,22 @@ pub mod board {
                             self.grid[y1][x1] = old_square; 
                         }
                         else{
+                            let mut set_passant = false; 
+                            if let units::Variety::Pawn = self.grid[y1][x1].piece.variety{
+                                if ((y1 as i64)-(y0 as i64)).abs() > 1{
+                                    set_passant = true; 
+                                }
+                                if old_square.is_empty() && ((y1 as i64)-(y0 as i64)).abs() == 1 && ((x1 as i64)-(x0 as i64)).abs() == 1{
+                                    self.grid[y0][x1] = Square::get_empty(); 
+                                }
+                            }
+
+                            if set_passant{
+                                self.passant = (x1 as i64, y1 as i64); 
+                            }
+                            else {
+                                self.passant = (-1, -1); 
+                            }
                             self.grid[y1][x1].piece.has_moved = true; 
                         }
                         return (true, "".to_string())
@@ -560,10 +608,6 @@ pub mod board {
 
             let valid_moves = self.get_all_valid_moves(positions); 
 
-            for mv in valid_moves.iter(){
-                println!("Move: {}", mv); 
-            }
-
             if valid_moves.len() > 0{
                 return false
             }
@@ -571,7 +615,7 @@ pub mod board {
             true
         }
 
-        pub fn move_check_check(&mut self, x_org: usize, y_org: usize, x_new: usize, y_new: usize) -> bool{
+        pub fn move_check(&mut self, x_org: usize, y_org: usize, x_new: usize, y_new: usize) -> bool{
             let check; 
             
             if x_org != x_new || y_org != y_new{
