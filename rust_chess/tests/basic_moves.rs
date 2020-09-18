@@ -127,3 +127,13 @@ fn promotion_capture_test() {
 
     assert!(chess_board.make_move("c7 d8=Q").1);
 }
+
+#[test]
+fn black_promotion() {
+    let mut chess_board = board::Board::init();
+    chess_board.fill_board("./tests/test_data/black_promotion.txt");
+
+    assert!(chess_board.make_move("d2 d1").1);
+    assert!(!chess_board.make_move("c2 c1").1);
+    assert!(chess_board.make_move("c2 d1=Q").1);
+}
