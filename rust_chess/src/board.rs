@@ -138,6 +138,7 @@ impl Board {
         Vec::<(i64, i64)>::new()
     }
 
+    //Returns game_over, valid_move and (error) message
     pub fn make_move(&mut self, input: &str) -> (bool, bool, String) {
         let tokens: Vec<&str> = input.split("=").collect();
         let pos = tokens[0];
