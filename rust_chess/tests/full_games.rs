@@ -59,7 +59,7 @@ fn game1() {
 }
 
 #[test]
-fn game2(){
+fn game2() {
     let mut chess_board = board::Board::init();
     chess_board.fill_board("./data/board.txt");
 

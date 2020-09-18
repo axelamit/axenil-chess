@@ -2,7 +2,6 @@ use crate::board;
 use crate::moves;
 
 #[derive(Debug, Copy, Clone)]
-//Kanske ta bort public här
 pub struct Piece {
     pub variety: Variety,
     pub color: Color,

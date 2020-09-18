@@ -86,7 +86,6 @@ pub fn get_pawn_capture_moves(
     moves
 }
 
-//Kanske kolla att den hamnar i en ruta (är kanske onödigt då det bara gäller när has_moved är false och den befinner sig på näst sista rutan)
 pub fn pawn_two_steps(
     x_org: usize,
     y_org: usize,

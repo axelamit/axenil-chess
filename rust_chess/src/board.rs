@@ -43,8 +43,8 @@ pub fn string_to_position(pos: &str) -> (usize, usize) {
     let column = pos.chars().nth(0).unwrap();
     let row = pos.chars().nth(1).unwrap();
 
-    if (column as i64) - 97 < 0 || 8 - ((row as i64) - 48) < 0{
-        return (100, 100)
+    if (column as i64) - 97 < 0 || 8 - ((row as i64) - 48) < 0 {
+        return (100, 100);
     }
     let x = (column as usize) - 97;
     let y = 8 - ((row as usize) - 48);
@@ -129,7 +129,7 @@ impl Board {
 
     pub fn get_moves(&self, pos: &str) -> Vec<(i64, i64)> {
         let (x, y) = string_to_position(pos);
-        if x <= 7 && y <= 7{
+        if x <= 7 && y <= 7 {
             let piece = self.grid[y][x].piece;
             if piece.color.forward() == self.current_player.forward() {
                 return piece.variety.get_moves(x, y, &self);
@@ -138,7 +138,6 @@ impl Board {
         Vec::<(i64, i64)>::new()
     }
 
-    //Returns (gameOver, valid_move, message)
     pub fn make_move(&mut self, input: &str) -> (bool, bool, String) {
         let tokens: Vec<&str> = input.split("=").collect();
         let pos = tokens[0];
@@ -225,8 +224,8 @@ impl Board {
         let split = pos.split(" ");
         let vec: Vec<&str> = split.collect();
 
-        if vec.len() < 2{
-            return (false, "Invalid move".to_string())
+        if vec.len() < 2 {
+            return (false, "Invalid move".to_string());
         }
 
         let (x0, y0) = string_to_position(vec[0]);
