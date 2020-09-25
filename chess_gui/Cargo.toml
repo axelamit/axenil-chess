@@ -1,0 +1,15 @@
+[package]
+name = "chess_gui"
+version = "0.1.0"
+authors = ["Malte Blomqvist <maltebl@kth.se>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust_chess = {path = "../rust_chess"}
+piston = "0.52.0"
+piston2d-graphics = "0.37.0"
+pistoncore-glutin_window = "0.66.0"
+piston2d-opengl_graphics = "0.74.0"
+find_folder = "0.3.0"

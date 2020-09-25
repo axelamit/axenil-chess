@@ -1,8 +1,8 @@
+#![allow(clippy::all)]
 use crate::moves;
 use crate::units;
 
 use std::fs;
-
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
     pub piece: units::Piece,
@@ -52,9 +52,9 @@ pub fn string_to_position(pos: &str) -> (usize, usize) {
 }
 
 pub fn position_to_string(r: u8, c: u8) -> String {
-    let row = (r as char).to_string();
-    let col = (c as char).to_string();
-    let pos = [col, row].join("");
+    let row = ((r + 97) as char).to_string();
+    let col = (c + 1).to_string();
+    let pos = [row, col].join("");
     pos
 }
 
