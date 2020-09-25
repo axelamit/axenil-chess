@@ -88,7 +88,6 @@ impl ChessController {
                     } else {
                         self.selected_space = Some((x, y));
                         let pos = rust_chess::board::position_to_string(y, x);
-                        println!("{}", pos);
                         let mut possible_moves = self.chess_board.get_moves(pos.as_str());
                         //Workaround for castling to work
                         if let rust_chess::units::Variety::King = self

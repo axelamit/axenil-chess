@@ -188,7 +188,6 @@ impl Board {
         self.print_board();
 
         let state = self.get_state();
-        println!("{}", state.0);
         if !state.0 {
             return (true, true, state.1);
         }
