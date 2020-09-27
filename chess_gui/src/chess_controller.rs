@@ -29,7 +29,7 @@ impl ChessController {
     fn update_board(&mut self) {
         for y in 0..8 {
             for x in 0..8 {
-                let mut piece_str = match self.chess_board.get_square(x, y).piece.variety {
+                let piece_str = match self.chess_board.get_square(x, y).piece.variety {
                     units::Variety::Empty => " ",
                     units::Variety::Pawn => "pawn",
                     units::Variety::Bishop => "bishop",
@@ -50,13 +50,11 @@ impl ChessController {
     }
 
     pub fn event<E: GenericEvent>(&mut self, view_pos: [f64; 2], view_size: f64, event: &E) {
-        if let Some(r) = event.render_args() {}
-
         if let Some(pos) = event.mouse_cursor_args() {
             self.mouse_pos = pos;
         }
         if let Some(Button::Mouse(MouseButton::Left)) = event.press_args() {
-            if !self.game_over{
+            if !self.game_over {
                 let (x, y) = (self.mouse_pos[0] - view_pos[0], self.mouse_pos[1]);
                 if x > 0.0 && x < view_size && y > 0.0 && y < view_size {
                     let (x, y) = ((x / view_size * 8.0) as u8, 7 - (y / view_size * 8.0) as u8);
@@ -64,9 +62,10 @@ impl ChessController {
                         for spaces in highlighted_spaces {
                             if x == spaces.0 as u8 && y == 7 - spaces.1 as u8 {
                                 //castling workaround!
-                                for castling in &self.castling_possible{
-                                    if x == castling.1.0 as u8 && y == 7 - castling.1.1 as u8 {
-                                        self.game_over = self.chess_board.make_move(castling.0.as_str()).0;
+                                for castling in &self.castling_possible {
+                                    if x == (castling.1).0 as u8 && y == 7 - (castling.1).1 as u8 {
+                                        self.game_over =
+                                            self.chess_board.make_move(castling.0.as_str()).0;
                                         self.update_board();
                                         break;
                                     }
@@ -75,7 +74,8 @@ impl ChessController {
                                     self.selected_space.expect("no inital piece selection").1,
                                     self.selected_space.expect("no inital piece selection").0,
                                 ) + " ";
-                                input.push_str(rust_chess::board::position_to_string(y, x).as_str());
+                                input
+                                    .push_str(rust_chess::board::position_to_string(y, x).as_str());
 
                                 self.game_over = self.chess_board.make_move(input.as_str()).0;
                                 self.update_board();
@@ -96,21 +96,21 @@ impl ChessController {
                             .piece
                             .variety
                         {
-                            let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) =
+                            let (valid, _, king_new_x, _, _, y) =
                                 moves::kingside_castling(&mut self.chess_board);
                             if valid {
                                 possible_moves.push((king_new_x as i64, y as i64));
                                 self.castling_possible
                                     .push(("O-O".to_string(), (king_new_x as i64, y as i64)));
                             }
-                            let (valid, king_org_x, king_new_x, rook_org_x, rook_new_x, y) =
+                            let (valid, _, king_new_x, _, _, y) =
                                 moves::queenside_castling(&mut self.chess_board);
                             if valid {
                                 possible_moves.push((king_new_x as i64, y as i64));
                                 self.castling_possible
                                     .push(("O-O-O".to_string(), (king_new_x as i64, y as i64)));
                             }
-                        }else{
+                        } else {
                             self.castling_possible = Vec::new();
                         }
                         self.highlighted_spaces = Some(possible_moves);

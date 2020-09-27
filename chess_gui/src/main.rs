@@ -1,4 +1,3 @@
-#![allow(unused)]
 extern crate glutin_window;
 extern crate piston;
 
@@ -19,7 +18,7 @@ mod chess_gui_view;
 fn main() {
     let opengl = OpenGL::V3_2;
 
-    let settings = WindowSettings::new("chessGUI", [800; 2]).exit_on_esc(true);
+    let settings = WindowSettings::new("chessGUI", [500; 2]).exit_on_esc(true);
     let mut window: GlutinWindow = settings.build().expect("Error building Glutin_window!");
 
     let mut events = Events::new(EventSettings::new().lazy(true));
@@ -58,7 +57,7 @@ fn load_imgs() -> HashMap<String, Texture> {
     let color = "white_";
     for piece in piecetypes.iter() {
         let image = graphics::Image::new().rect(graphics::rectangle::square(0.0, 0.0, 200.0));
-        let mut p: String = path.to_string() + color + piece + ".png";
+        let p: String = path.to_string() + color + piece + ".png";
         let texture = Texture::from_path(Path::new(&p), &TextureSettings::new())
             .expect("error loading image");
         imgs.insert(color.to_string() + piece, texture);

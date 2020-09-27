@@ -1,4 +1,3 @@
-#![allow(clippy::all)]
 use rust_chess::board;
 //use rust_chess::units;
 

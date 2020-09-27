@@ -1,4 +1,3 @@
-#![allow(clippy::all)]
 use crate::moves;
 use crate::units;
 
