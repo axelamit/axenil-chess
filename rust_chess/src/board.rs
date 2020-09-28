@@ -2,7 +2,6 @@ use crate::moves;
 use crate::units;
 
 use std::fs;
-
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
     pub piece: units::Piece,
@@ -52,8 +51,8 @@ pub fn string_to_position(pos: &str) -> (usize, usize) {
 }
 
 pub fn position_to_string(r: u8, c: u8) -> String {
-    let row = (r as char).to_string();
-    let col = (c as char).to_string();
+    let row = (r + 1).to_string();
+    let col = ((c + 97) as char).to_string();
     let pos = [col, row].join("");
     pos
 }
@@ -293,8 +292,8 @@ impl Board {
 
     pub fn checkmate(&mut self) -> bool {
         let mut positions: Vec<String> = Vec::new();
-        for i in 49..57 {
-            for j in 97..105 {
+        for i in 0..8 {
+            for j in 0..8 {
                 let pos = position_to_string(i as u8, j as u8);
                 positions.push(pos.to_owned());
             }
