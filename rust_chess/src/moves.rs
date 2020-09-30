@@ -116,7 +116,12 @@ pub fn pawn_passant(
     if passant.1 == (y_org as i64) && ((passant.0 as i64) - (x_org as i64)).abs() == 1 {
         let y = (y_org as i64) + chess_piece.color.forward();
         let x = passant.0 as i64;
-        if y >= 0 && y <= 7 && x >= 0 && x <= 7 && chess_board.get_square(x as usize, y as usize).is_empty() {
+        if y >= 0
+            && y <= 7
+            && x >= 0
+            && x <= 7
+            && chess_board.get_square(x as usize, y as usize).is_empty()
+        {
             moves.push((x, y));
         }
     }
