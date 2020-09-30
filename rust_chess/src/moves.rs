@@ -74,7 +74,7 @@ pub fn get_pawn_capture_moves(
         }
     }
 
-    if (x_org as i64) - 1 >= 0 {
+    if x_org > 0 {
         let next_square = chess_board.get_square(x_org - 1, y);
         if (next_square.piece.color.forward() != chess_piece.color.forward())
             && !next_square.is_empty()
@@ -116,10 +116,8 @@ pub fn pawn_passant(
     if passant.1 == (y_org as i64) && ((passant.0 as i64) - (x_org as i64)).abs() == 1 {
         let y = (y_org as i64) + chess_piece.color.forward();
         let x = passant.0 as i64;
-        if y >= 0 && y <= 7 && x >= 0 && x <= 7 {
-            if chess_board.get_square(x as usize, y as usize).is_empty() {
-                moves.push((x, y));
-            }
+        if y >= 0 && y <= 7 && x >= 0 && x <= 7 && chess_board.get_square(x as usize, y as usize).is_empty() {
+            moves.push((x, y));
         }
     }
     moves
@@ -171,8 +169,7 @@ pub fn move_normal(
     capture: bool,
 ) -> Vec<(i64, i64)> {
     let chess_piece = chess_board.get_square(x, y).piece;
-    let possible_moves = get_possible_moves(x, y, chess_piece, chess_board, capture);
-    possible_moves
+    get_possible_moves(x, y, chess_piece, chess_board, capture)
 }
 
 pub fn castling(
