@@ -147,12 +147,12 @@ impl Board {
                 for cur_pos in all_moves.iter() {
                     let input = pos.to_owned()
                         + " "
-                        + position_to_string((7-cur_pos.1) as u8, (cur_pos.0) as u8).as_str();
-                    
+                        + position_to_string((7 - cur_pos.1) as u8, (cur_pos.0) as u8).as_str();
+
                     let (valid1, _) = self.check_if_legal_move(input.as_str(), false);
-                    
+
                     if valid1 {
-                        ret.push(cur_pos.clone());
+                        ret.push(*cur_pos);
                     }
                 }
             }
