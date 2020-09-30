@@ -137,24 +137,17 @@ impl Board {
         ret
     }
     pub fn show_moves(&mut self, pos: &str) -> Vec<(i64, i64)> {
-        let (x, y) = string_to_position(pos);
         let mut ret = Vec::<(i64, i64)>::new();
-        if x <= 7 && y <= 7 {
-            let piece = self.grid[y][x].piece;
+        let all_moves = self.get_moves(pos);
+        for cur_pos in all_moves.iter() {
+            let input = pos.to_owned()
+                + " "
+                + position_to_string((7 - cur_pos.1) as u8, (cur_pos.0) as u8).as_str();
 
-            if piece.color.forward() == self.current_player.forward() {
-                let all_moves = self.get_moves(pos);
-                for cur_pos in all_moves.iter() {
-                    let input = pos.to_owned()
-                        + " "
-                        + position_to_string((7 - cur_pos.1) as u8, (cur_pos.0) as u8).as_str();
+            let (valid1, _) = self.check_if_legal_move(input.as_str(), false);
 
-                    let (valid1, _) = self.check_if_legal_move(input.as_str(), false);
-
-                    if valid1 {
-                        ret.push(*cur_pos);
-                    }
-                }
+            if valid1 {
+                ret.push(*cur_pos);
             }
         }
         ret
