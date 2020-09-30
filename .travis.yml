@@ -5,4 +5,5 @@ script:
   - cargo build --verbose --workspace
   - cargo test --verbose --workspace
   - cargo check --verbose
+  - cargi fmt --verbose
   - cargo clippy --verbose --workspace -- -D warnings
