@@ -125,15 +125,39 @@ impl Board {
         }
     }
 
-    pub fn get_moves(&self, pos: &str) -> Vec<(i64, i64)> {
+    fn get_moves(&mut self, pos: &str) -> Vec<(i64, i64)> {
         let (x, y) = string_to_position(pos);
+        let mut ret = Vec::<(i64, i64)>::new();
         if x <= 7 && y <= 7 {
             let piece = self.grid[y][x].piece;
             if piece.color.forward() == self.current_player.forward() {
-                return piece.variety.get_moves(x, y, &self);
+                ret = piece.variety.get_moves(x, y, &self);
             }
         }
-        Vec::<(i64, i64)>::new()
+        ret
+    }
+    pub fn show_moves(&mut self, pos: &str) -> Vec<(i64, i64)> {
+        let (x, y) = string_to_position(pos);
+        let mut ret = Vec::<(i64, i64)>::new();
+        if x <= 7 && y <= 7 {
+            let piece = self.grid[y][x].piece;
+
+            if piece.color.forward() == self.current_player.forward() {
+                let all_moves = self.get_moves(pos);
+                for cur_pos in all_moves.iter() {
+                    let input = pos.to_owned()
+                        + " "
+                        + position_to_string((7-cur_pos.1) as u8, (cur_pos.0) as u8).as_str();
+                    
+                    let (valid1, _) = self.check_if_legal_move(input.as_str(), false);
+                    
+                    if valid1 {
+                        ret.push(cur_pos.clone());
+                    }
+                }
+            }
+        }
+        ret
     }
 
     //Returns game_over, valid_move and (error) message
@@ -224,7 +248,7 @@ impl Board {
                 (false, "Stalemate".to_string())
             }
         } else if self.check() {
-                (true, "Check".to_string())
+            (true, "Check".to_string())
         } else {
             (true, "".to_string())
         }
@@ -344,8 +368,8 @@ impl Board {
             for j in 0..8 {
                 if self.grid[i][j].piece.color.forward() == self.current_player.forward() {
                     if let units::Variety::King = self.grid[i][j].piece.variety {
-                        king_x = j; 
-                        king_y = i; 
+                        king_x = j;
+                        king_y = i;
                     }
                 }
             }
@@ -385,7 +409,9 @@ impl Board {
                     units::Variety::King => square = "k".to_string(),
                     _ => square = "x".to_string(),
                 }
-                if let units::Color::Black = self.grid[i][j].piece.color { square = square.to_uppercase() }
+                if let units::Color::Black = self.grid[i][j].piece.color {
+                    square = square.to_uppercase()
+                }
                 print!("{} ", square);
             }
             println!("|{}", 8 - i);
