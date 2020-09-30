@@ -20,7 +20,7 @@ impl ChessView {
         context: &Context,
         g: &mut G,
     ) {
-        use graphics::{rectangle, Line, Rectangle};
+        use graphics::{rectangle, Rectangle};
 
         let settings = &self.settings;
         let board_area = [

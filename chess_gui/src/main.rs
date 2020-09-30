@@ -56,7 +56,7 @@ fn load_imgs() -> HashMap<String, Texture> {
     let piecetypes = ["pawn", "king", "rook", "knight", "bishop", "queen"];
     let color = "white_";
     for piece in piecetypes.iter() {
-        let image = graphics::Image::new().rect(graphics::rectangle::square(0.0, 0.0, 200.0));
+        let _image = graphics::Image::new().rect(graphics::rectangle::square(0.0, 0.0, 200.0));
         let p: String = path.to_string() + color + piece + ".png";
         let texture = Texture::from_path(Path::new(&p), &TextureSettings::new())
             .expect("error loading image");
@@ -64,8 +64,8 @@ fn load_imgs() -> HashMap<String, Texture> {
     }
     let color = "black_";
     for piece in piecetypes.iter() {
-        let image = graphics::Image::new().rect(graphics::rectangle::square(0.0, 0.0, 200.0));
-        let mut p: String = path.to_string() + color + piece + ".png";
+        let _image = graphics::Image::new().rect(graphics::rectangle::square(0.0, 0.0, 200.0));
+        let p: String = path.to_string() + color + piece + ".png";
         let texture = Texture::from_path(Path::new(&p), &TextureSettings::new())
             .expect("error loading image");
         imgs.insert(color.to_string() + piece, texture);

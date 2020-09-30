@@ -2,7 +2,9 @@ language: rust
 cache: cargo
 script:
   - rustup component add clippy 
+  - rustup component add rustfmt
   - cargo build --verbose --workspace
   - cargo test --verbose --workspace
   - cargo check --verbose
+  - cargo fmt --verbose
   - cargo clippy --verbose --workspace -- -D warnings

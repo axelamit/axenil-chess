@@ -39,7 +39,7 @@ pub fn get_variety(variety: char) -> units::Variety {
 }
 
 pub fn string_to_position(pos: &str) -> (usize, usize) {
-    let column = pos.chars().nth(0).unwrap();
+    let column = pos.chars().next().unwrap();
     let row = pos.chars().nth(1).unwrap();
 
     if (column as i64) - 97 < 0 || 8 - ((row as i64) - 48) < 0 {
@@ -53,8 +53,7 @@ pub fn string_to_position(pos: &str) -> (usize, usize) {
 pub fn position_to_string(r: u8, c: u8) -> String {
     let row = (r + 1).to_string();
     let col = ((c + 97) as char).to_string();
-    let pos = [col, row].join("");
-    pos
+    [col, row].join("")
 }
 
 pub fn get_color(color: char) -> units::Color {
@@ -139,7 +138,7 @@ impl Board {
 
     //Returns game_over, valid_move and (error) message
     pub fn make_move(&mut self, input: &str) -> (bool, bool, String) {
-        let tokens: Vec<&str> = input.split("=").collect();
+        let tokens: Vec<&str> = input.split('=').collect();
         let pos = tokens[0];
         let mut promotion = "".to_string();
         if tokens.len() > 1 {
@@ -193,14 +192,14 @@ impl Board {
         (false, true, state.1)
     }
     pub fn promotion_required(&mut self, input: &str) -> bool {
-        let tokens: Vec<&str> = input.split("=").collect();
+        let tokens: Vec<&str> = input.split('=').collect();
         let pos = tokens[0];
         self.promotion = false;
-        if "O-O-O" != pos && "O-O-O" != pos{
-            let (valid1, message1) = self.check_if_legal_move(pos, false);
+        if "O-O-O" != pos && "O-O" != pos {
+            let (valid1, _) = self.check_if_legal_move(pos, false);
             self.promotion = true;
-            let (valid2, message2) = self.check_if_legal_move(pos, false);
-            if valid2 && !valid1{
+            let (valid2, _) = self.check_if_legal_move(pos, false);
+            if valid2 && !valid1 {
                 return true;
             }
         }
@@ -220,21 +219,19 @@ impl Board {
     pub fn get_state(&mut self) -> (bool, String) {
         if self.checkmate() {
             if self.check() {
-                return (false, "Checkmate".to_string());
+                (false, "Checkmate".to_string())
             } else {
-                return (false, "Stalemate".to_string());
+                (false, "Stalemate".to_string())
             }
+        } else if self.check() {
+                (true, "Check".to_string())
         } else {
-            if self.check() {
-                return (true, "Check".to_string());
-            } else {
-                return (true, "".to_string());
-            }
+            (true, "".to_string())
         }
     }
 
     pub fn check_if_legal_move(&mut self, pos: &str, move_piece: bool) -> (bool, String) {
-        let split = pos.split(" ");
+        let split = pos.split(' ');
         let vec: Vec<&str> = split.collect();
 
         if vec.len() < 2 {
@@ -314,7 +311,7 @@ impl Board {
 
         let valid_moves = self.get_all_valid_moves(positions);
 
-        if valid_moves.len() > 0 {
+        if !valid_moves.is_empty() {
             return false;
         }
 
@@ -346,12 +343,9 @@ impl Board {
         for i in 0..8 {
             for j in 0..8 {
                 if self.grid[i][j].piece.color.forward() == self.current_player.forward() {
-                    match self.grid[i][j].piece.variety {
-                        units::Variety::King => {
-                            king_x = j;
-                            king_y = i;
-                        }
-                        _ => (),
+                    if let units::Variety::King = self.grid[i][j].piece.variety {
+                        king_x = j; 
+                        king_y = i; 
                     }
                 }
             }
@@ -391,10 +385,7 @@ impl Board {
                     units::Variety::King => square = "k".to_string(),
                     _ => square = "x".to_string(),
                 }
-                match self.grid[i][j].piece.color {
-                    units::Color::Black => square = square.to_uppercase(),
-                    _ => (),
-                }
+                if let units::Color::Black = self.grid[i][j].piece.color { square = square.to_uppercase() }
                 print!("{} ", square);
             }
             println!("|{}", 8 - i);
