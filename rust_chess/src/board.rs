@@ -192,7 +192,20 @@ impl Board {
         }
         (false, true, state.1)
     }
-
+    pub fn promotion_required(&mut self, input: &str) -> bool {
+        let tokens: Vec<&str> = input.split("=").collect();
+        let pos = tokens[0];
+        self.promotion = false;
+        if "O-O-O" != pos && "O-O-O" != pos{
+            let (valid1, message1) = self.check_if_legal_move(pos, false);
+            self.promotion = true;
+            let (valid2, message2) = self.check_if_legal_move(pos, false);
+            if valid2 && !valid1{
+                return true;
+            }
+        }
+        false
+    }
     pub fn promotion(&mut self, variety: units::Variety) {
         for i in 0..8 {
             if let units::Variety::Pawn = self.grid[0][i].piece.variety {
